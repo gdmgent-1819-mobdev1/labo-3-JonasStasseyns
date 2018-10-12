@@ -1,3 +1,7 @@
+* {
+    margin: 0;
+}
+
 body {
     font-family: sans-serif;
 }
@@ -6,6 +10,13 @@ body {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
+    position: absolute;
+}
+
+#map {
+    width: 100vw;
+    height: 100vh;
+    float:left;
 }
 
 .panel {

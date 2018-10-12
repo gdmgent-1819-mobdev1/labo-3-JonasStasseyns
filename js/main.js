@@ -133,3 +133,5 @@ function SwitchList(index, type){
 }
 
 fetchData();
+
+//GeoLocation
