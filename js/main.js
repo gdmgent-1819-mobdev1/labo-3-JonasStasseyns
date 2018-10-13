@@ -1,22 +1,34 @@
-function fetchData(){
-//HTML5 Fetch
-fetch('https://randomuser.me/api?results=10')
-  .then(function(response) {
-    return response.json();
-  })
-  .then(function(myJson) {
-    let tmpLikes = localStorage.getItem('likes');
-    let tmpDislikes = localStorage.getItem('dislikes');
-    let clear = true;
-    for(let i=0;i<myJson.length;i++){
-        if(tmpLikes.includes(myJson.results[i].login.uuid) || tmpDislikes.includes(myJson.results[i].login.uuid)){
-            clear = false;
-        }else{
-            clear = true;
-        }
+function fetchData() {
+    //HTML5 Fetch
+    fetch('https://randomuser.me/api?results=10')
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (myJson) {
+            localStorage.setItem('fetched-profiles', JSON.stringify(myJson));
+            validateFetch();
+        })
+}
 
-  };
-})}
+function validateFetch() {
+    let fetchedArray = JSON.parse(localStorage.getItem('fetched-profiles'));
+    let likeArray = JSON.parse(localStorage.getItem('likes'));
+    let dislikeArray = JSON.parse(localStorage.getItem('dislikes'));
+    let clear = true;
+    for (let i = 0; i < fetchedArray.length; i++) {
+        if (likeArray.includes(fetchedArray.results[i].login.uuid) || dislikeArray.includes(fetchedArray.results[i].login.uuid)) {
+            break;
+            clear = false;
+            console.log('duplicate found');
+            localStorage.removeItem('fetched-profiles');
+            fetchData();
+        }
+    }
+    if (clear) {
+        nextProfile();
+        DisplayLikesDislikes(true);
+    }
+}
 
 document.querySelector('.like').addEventListener('click', function(){
     ClassifyProfile('like');
@@ -32,7 +44,7 @@ let displayLDindex = 0;
 
 function nextProfile(){
     //De-stringify array from localStorage
-    let array = JSON.parse(localStorage.getItem('test'));
+    let array = JSON.parse(localStorage.getItem('fetched-profiles'));
     //store profile from array with current $index in $currentprofile
     currentProfile = array.results[index];
     displayProfile(currentProfile);
@@ -113,6 +125,7 @@ function DisplayLikesDislikes(init){
             });
         }
     }
+    addMarker();
 }
 
 function SwitchList(index, type){
@@ -130,8 +143,21 @@ function SwitchList(index, type){
     localStorage.setItem('likes', JSON.stringify(likes));
     localStorage.setItem('dislikes', JSON.stringify(dislikes));
     DisplayLikesDislikes();
+    addMarker();
 }
 
 fetchData();
 
 //GeoLocation
+mapboxgl.accessToken = 'pk.eyJ1IjoiYXJ2ZWxsb24iLCJhIjoiY2puNG1zdWd4M2kzdjNrcXlleGtpazI2cCJ9.p7i1IOVRm40GP4qdK4JuGg';
+var map = new mapboxgl.Map({
+container: 'map',
+style: 'mapbox://styles/mapbox/streets-v10'
+});
+
+function addMarker(){
+    let likes = JSON.parse(localStorage.getItem('likes'));
+for(i=0;i<likes.length;i++){
+    new mapboxgl.Marker().setLngLat([likes[i].location.coordinates.longitude, likes[i].location.coordinates.latitude]).addTo(map);
+}
+}
