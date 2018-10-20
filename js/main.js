@@ -16,28 +16,30 @@ function fetchData() {
         .then(function (myJson) {
             localStorage.setItem('fetched-profiles', JSON.stringify(myJson));
             validateFetch();
-            //navigator.geolocation.getCurrentPosition(locationSuccess);
+            getClientPosition();
         })
 
 
 
 }
 
-if ("geolocation" in navigator) {
-    if (localStorage.getItem('coords') == undefined) {
-        navigator.geolocation.getCurrentPosition(function (pos) {
-            let coordLon = pos.coords.longitude;
-            let coordLat = pos.coords.latitude;
-            console.log(coordLon);
-            console.log(coordLat);
-            localStorage.setItem('coordLon', coordLon);
-            localStorage.setItem('coordLat', coordLat);
-            console.log(localStorage.getItem('coordLon'));
-            console.log(localStorage.getItem('coordLat'));
-        });
+function getClientPosition(){
+    if ("geolocation" in navigator) {
+        if (localStorage.getItem('coords') == undefined) {
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                let coordLon = pos.coords.longitude;
+                let coordLat = pos.coords.latitude;
+                console.log(coordLon);
+                console.log(coordLat);
+                localStorage.setItem('clientLon', coordLon);
+                localStorage.setItem('clientLat', coordLat);
+                console.log(localStorage.getItem('clientLon'));
+                console.log(localStorage.getItem('clientLat'));
+            });
+        }
+    } else {
+        console.log("Geolocation request denied or not available");
     }
-} else {
-    console.log("Geolocation request denied or not available");
 }
 
 function validateFetch() {
@@ -97,11 +99,11 @@ function displayProfile(hooman) {
     document.querySelector('.data-container').innerHTML += '<h3>Age: ' + hooman.dob.age + '</h3>';
     document.querySelector('.data-container').innerHTML += '<h3>Address: ' + hooman.location.street + ',</h3>';
     document.querySelector('.data-container').innerHTML += '<h3>' + hooman.location.city + '</h3>';
-    let targetCoords = hooman.location.coordinates;
-    console.log(typeof (localStorage.getItem('coords')));
-    let clientCoords = localStorage.getItem('coords');
-    console.log(clientCoords);
-    document.querySelector('.data-container').innerHTML += '<h3>' + getDistance(clientCoords, clientCoords, targetCoords.latitude, targetCoords.longitude) + '</h3>';
+    let targetLat = hooman.location.coordinates.latitude;
+    let targetLon = hooman.location.coordinates.longitude;
+    let clientLat = localStorage.getItem('clientLat');
+    let clientLon = localStorage.getItem('clientLon');
+    document.querySelector('.data-container').innerHTML += '<h3>' + getDistance(clientLat, clientLon, targetLat, targetLon) + '</h3>';
 }
 
 function ClassifyProfile(type) {
@@ -201,10 +203,6 @@ function getDistance(clientLat, clientLon, targetLat, targetLon) {
     dist = dist * 180 / Math.PI;
     dist = dist * 60 * 1.1515;
     dist = dist * 1.609344;
+    dist = Math.floor(dist) + 'km';
     return dist;
-}
-
-function locationSuccess(pos) {
-    console.log(pos);
-    localStorage.setItem('clientCoords', JSON.stringify(pos.coords));
 }
