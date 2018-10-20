@@ -1,3 +1,6 @@
+localStorage.removeItem('coords');
+localStorage.removeItem('fetched-profiles');
+
 (function () {
     //console.log(localStorage.getItem('clientCoords'));
 })();
@@ -23,11 +26,14 @@ function fetchData() {
 if ("geolocation" in navigator) {
     if (localStorage.getItem('coords') == undefined) {
         navigator.geolocation.getCurrentPosition(function (pos) {
-            let coord = [];
-            coord['longitude'] = pos.coords.longitude;
-            coord['latitude'] = pos.coords.latitude;
-            console.table(coord);
-            localStorage.setItem('coords', JSON.stringify(coord));
+            let coordLon = pos.coords.longitude;
+            let coordLat = pos.coords.latitude;
+            console.log(coordLon);
+            console.log(coordLat);
+            localStorage.setItem('coordLon', coordLon);
+            localStorage.setItem('coordLat', coordLat);
+            console.log(localStorage.getItem('coordLon'));
+            console.log(localStorage.getItem('coordLat'));
         });
     }
 } else {
@@ -93,9 +99,9 @@ function displayProfile(hooman) {
     document.querySelector('.data-container').innerHTML += '<h3>' + hooman.location.city + '</h3>';
     let targetCoords = hooman.location.coordinates;
     console.log(typeof (localStorage.getItem('coords')));
-    let clientCoords = JSON.parse(localStorage.getItem('coords'));
-    console.log(clientCoords.latitude);
-    document.querySelector('.data-container').innerHTML += '<h3>' + getDistance(clientCoords.latitude, clientCoords.longitude, targetCoords.latitude, targetCoords.longitude) + '</h3>';
+    let clientCoords = localStorage.getItem('coords');
+    console.log(clientCoords);
+    document.querySelector('.data-container').innerHTML += '<h3>' + getDistance(clientCoords, clientCoords, targetCoords.latitude, targetCoords.longitude) + '</h3>';
 }
 
 function ClassifyProfile(type) {
