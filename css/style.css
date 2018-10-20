@@ -13,10 +13,18 @@ body {
     position: absolute;
 }
 
-#map {
+.map {
     width: 100vw;
     height: 100vh;
     float:left;
+    opacity: 0;
+    z-index: -5;
+    transition: opacity 1s;
+}
+
+.map-visible {
+    opacity: 1;
+    z-index: 5;
 }
 
 .panel {

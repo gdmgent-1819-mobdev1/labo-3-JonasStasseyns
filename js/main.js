@@ -1,11 +1,8 @@
-localStorage.removeItem('coords');
-localStorage.removeItem('fetched-profiles');
+//TODO replace profile-coordinates with coordinates calculated from address
+//TODO replace confirm-alert for geolocation with eventlistener on button
 
-(function () {
-    //console.log(localStorage.getItem('clientCoords'));
-})();
-
-
+//localStorage.removeItem('coords');
+//localStorage.removeItem('fetched-profiles');
 
 function fetchData() {
     //HTML5 Fetch
@@ -16,27 +13,31 @@ function fetchData() {
         .then(function (myJson) {
             localStorage.setItem('fetched-profiles', JSON.stringify(myJson));
             validateFetch();
-            getClientPosition();
         })
 
 
 
 }
 
+//Check is clientlocation is known and otherwise prompt request
+if (localStorage.getItem('clientLon') == undefined || localStorage.getItem('clientLat') == undefined) {
+    if(confirm('May we determine your location to calculate distance with other profiles?')){
+        getClientPosition();
+    }
+}
+
 function getClientPosition(){
     if ("geolocation" in navigator) {
-        if (localStorage.getItem('coords') == undefined) {
             navigator.geolocation.getCurrentPosition(function (pos) {
                 let coordLon = pos.coords.longitude;
                 let coordLat = pos.coords.latitude;
-                console.log(coordLon);
-                console.log(coordLat);
+                console.log('var coordLon ' + coordLon);
+                console.log('var coordLat ' + coordLat);
                 localStorage.setItem('clientLon', coordLon);
                 localStorage.setItem('clientLat', coordLat);
-                console.log(localStorage.getItem('clientLon'));
-                console.log(localStorage.getItem('clientLat'));
+                console.log('LS Lon' + localStorage.getItem('clientLon'));
+                console.log('LS Lat' + localStorage.getItem('clientLat'));
             });
-        }
     } else {
         console.log("Geolocation request denied or not available");
     }
@@ -103,7 +104,11 @@ function displayProfile(hooman) {
     let targetLon = hooman.location.coordinates.longitude;
     let clientLat = localStorage.getItem('clientLat');
     let clientLon = localStorage.getItem('clientLon');
-    document.querySelector('.data-container').innerHTML += '<h3>' + getDistance(clientLat, clientLon, targetLat, targetLon) + '</h3>';
+    document.querySelector('.data-container').innerHTML += '<h3 class="location">' + getDistance(clientLat, clientLon, targetLat, targetLon) + '</h3>';
+    
+    document.querySelector('.location').addEventListener('click', function(){
+        document.querySelector('.map').classList.add('map-visible');
+    });
 }
 
 function ClassifyProfile(type) {
@@ -206,3 +211,9 @@ function getDistance(clientLat, clientLon, targetLat, targetLon) {
     dist = Math.floor(dist) + 'km';
     return dist;
 }
+
+mapboxgl.accessToken = 'pk.eyJ1IjoiYXJ2ZWxsb24iLCJhIjoiY2puNG1zdWd4M2kzdjNrcXlleGtpazI2cCJ9.p7i1IOVRm40GP4qdK4JuGg';
+let map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v9'
+});
