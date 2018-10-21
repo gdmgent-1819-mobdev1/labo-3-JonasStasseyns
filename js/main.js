@@ -19,6 +19,13 @@ function fetchData() {
 
 }
 
+//Initialize Map
+mapboxgl.accessToken = 'pk.eyJ1IjoiYXJ2ZWxsb24iLCJhIjoiY2puNG1zdWd4M2kzdjNrcXlleGtpazI2cCJ9.p7i1IOVRm40GP4qdK4JuGg';
+let map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v9'
+});
+
 //Check is clientlocation is known and otherwise prompt request
 if (localStorage.getItem('clientLon') == undefined || localStorage.getItem('clientLat') == undefined) {
     if(confirm('May we determine your location to calculate distance with other profiles?')){
@@ -105,7 +112,7 @@ function displayProfile(hooman) {
     let clientLat = localStorage.getItem('clientLat');
     let clientLon = localStorage.getItem('clientLon');
     document.querySelector('.data-container').innerHTML += '<h3 class="location">' + getDistance(clientLat, clientLon, targetLat, targetLon) + '</h3>';
-    
+    addProfileToMap(targetLon, targetLat);
     document.querySelector('.location').addEventListener('click', function(){
         document.querySelector('.map').classList.add('map-visible');
     });
@@ -190,7 +197,6 @@ function SwitchList(index, type) {
 
 fetchData();
 
-
 function getDistance(clientLat, clientLon, targetLat, targetLon) {
     console.log(clientLat);
     console.log(clientLon);
@@ -212,8 +218,42 @@ function getDistance(clientLat, clientLon, targetLat, targetLon) {
     return dist;
 }
 
-mapboxgl.accessToken = 'pk.eyJ1IjoiYXJ2ZWxsb24iLCJhIjoiY2puNG1zdWd4M2kzdjNrcXlleGtpazI2cCJ9.p7i1IOVRm40GP4qdK4JuGg';
-let map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/streets-v9'
-});
+//TMP::RM
+function metersToPixelsAtMaxZoom(meters, lat){
+    return meters / 0.075 / Math.cos(lat * Math.PI / 180);
+}
+
+function addProfileToMap(lon, lat){
+    let marker = new mapboxgl.Marker().setLngLat([lon, lat]).addTo(map);
+    map.addSource("geomarker", {
+        "type":"geojson",
+        "data": {
+            "type": "FeatureCollection",
+            "features": [{
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [lon, lat]
+                }
+            }]
+        }
+    });
+    map.addLayer({
+        "id": "circles1",
+        "source": "markers",
+        "type": "circle",
+        "paint": {
+            "circle-radius": {
+              stops: [
+                [0, 0],
+                [20, metersToPixelsAtMaxZoom(5000, lat)]
+              ],
+              base: 2
+            },
+            "circle-color": "#007cbf",
+            "circle-opacity": 0.5,
+            "circle-stroke-width": 0,
+        },
+        "filter": ["==", "modelId", 1],
+    });
+}
