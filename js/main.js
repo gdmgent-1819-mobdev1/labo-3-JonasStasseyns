@@ -112,9 +112,8 @@ function displayProfile(hooman) {
     let clientLat = localStorage.getItem('clientLat');
     let clientLon = localStorage.getItem('clientLon');
     document.querySelector('.data-container').innerHTML += '<h3 class="location">' + getDistance(clientLat, clientLon, targetLat, targetLon) + '</h3>';
-    addProfileToMap(targetLon, targetLat);
     document.querySelector('.location').addEventListener('click', function(){
-        document.querySelector('.map').classList.add('map-visible');
+        addProfileToMap(targetLon, targetLat);
     });
 }
 
@@ -218,15 +217,21 @@ function getDistance(clientLat, clientLon, targetLat, targetLon) {
     return dist;
 }
 
-//TMP::RM
 function metersToPixelsAtMaxZoom(meters, lat){
     return meters / 0.075 / Math.cos(lat * Math.PI / 180);
 }
 
 function addProfileToMap(lon, lat){
-    let marker = new mapboxgl.Marker().setLngLat([lon, lat]).addTo(map);
+    //Make map visible
+    document.querySelector('.map').classList.add('map-visible');
+    //Center on  target + zoom
+    map.flyTo({
+        center: [lon, lat],
+        zoom: 9
+    });
+    //Add location circle
     map.addSource("geomarker", {
-        "type":"geojson",
+        "type": "geojson",
         "data": {
             "type": "FeatureCollection",
             "features": [{
@@ -235,25 +240,23 @@ function addProfileToMap(lon, lat){
                     "type": "Point",
                     "coordinates": [lon, lat]
                 }
-            }]
+        }]
         }
     });
     map.addLayer({
-        "id": "circles1",
-        "source": "markers",
+        "id": "geomarker",
         "type": "circle",
+        "source": "geomarker",
         "paint": {
             "circle-radius": {
-              stops: [
-                [0, 0],
-                [20, metersToPixelsAtMaxZoom(5000, lat)]
-              ],
-              base: 2
-            },
-            "circle-color": "#007cbf",
-            "circle-opacity": 0.5,
-            "circle-stroke-width": 0,
-        },
-        "filter": ["==", "modelId", 1],
+                  stops: [
+                    [0, 0],
+                    [20, metersToPixelsAtMaxZoom(5000, lat)]
+                  ],
+                  base: 2
+                },
+            "circle-color": "#3BBB87", 
+            "circle-opacity": 0.5
+        }
     });
 }
