@@ -1,6 +1,8 @@
 //TODO replace profile-coordinates with coordinates calculated from address
 //TODO replace confirm-alert for geolocation with eventlistener on button
 
+//BUG Zoom level or radius varies
+
 //localStorage.removeItem('coords');
 //localStorage.removeItem('fetched-profiles');
 
@@ -28,23 +30,23 @@ let map = new mapboxgl.Map({
 
 //Check is clientlocation is known and otherwise prompt request
 if (localStorage.getItem('clientLon') == undefined || localStorage.getItem('clientLat') == undefined) {
-    if(confirm('May we determine your location to calculate distance with other profiles?')){
+    if (confirm('May we determine your location to calculate distance with other profiles?')) {
         getClientPosition();
     }
 }
 
-function getClientPosition(){
+function getClientPosition() {
     if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(function (pos) {
-                let coordLon = pos.coords.longitude;
-                let coordLat = pos.coords.latitude;
-                console.log('var coordLon ' + coordLon);
-                console.log('var coordLat ' + coordLat);
-                localStorage.setItem('clientLon', coordLon);
-                localStorage.setItem('clientLat', coordLat);
-                console.log('LS Lon' + localStorage.getItem('clientLon'));
-                console.log('LS Lat' + localStorage.getItem('clientLat'));
-            });
+        navigator.geolocation.getCurrentPosition(function (pos) {
+            let coordLon = pos.coords.longitude;
+            let coordLat = pos.coords.latitude;
+            console.log('var coordLon ' + coordLon);
+            console.log('var coordLat ' + coordLat);
+            localStorage.setItem('clientLon', coordLon);
+            localStorage.setItem('clientLat', coordLat);
+            console.log('LS Lon' + localStorage.getItem('clientLon'));
+            console.log('LS Lat' + localStorage.getItem('clientLat'));
+        });
     } else {
         console.log("Geolocation request denied or not available");
     }
@@ -78,6 +80,11 @@ document.querySelector('.like').addEventListener('click', function () {
 document.querySelector('.dislike').addEventListener('click', function () {
     ClassifyProfile('dislike');
 });
+document.querySelector('.close-map').addEventListener('click', function(){
+    document.querySelector('.close-map').style.opacity = 0;
+    document.querySelector('.map').classList.remove('map-visible');
+
+});
 
 let index = 0;
 let currentProfile = '';
@@ -101,18 +108,19 @@ function nextProfile() {
 function displayProfile(hooman) {
     //Generating elements
     document.querySelector('.data-container').innerHTML = '';
-    document.querySelector('.data-container').innerHTML += '<h1>' + hooman.name.first + ' ' + hooman.name.last + '</h1>';
+    document.querySelector('.data-container').innerHTML += '<h2 class="profile-name">' + hooman.name.first + ' ' + hooman.name.last + '</h2>';
     document.querySelector('.data-container').innerHTML += '<div class="picture"></div>';
     document.querySelector('.picture').style.backgroundImage = 'url(' + hooman.picture.large + ')';
-    document.querySelector('.data-container').innerHTML += '<h3>Age: ' + hooman.dob.age + '</h3>';
-    document.querySelector('.data-container').innerHTML += '<h3>Address: ' + hooman.location.street + ',</h3>';
-    document.querySelector('.data-container').innerHTML += '<h3>' + hooman.location.city + '</h3>';
+    document.querySelector('.data-container').innerHTML += '<h3 class="profile-spec">Age</h3><p>' + hooman.dob.age + '</p>';
+    document.querySelector('.data-container').innerHTML += '<h3 class="profile-spec">Address</h3><p>' + hooman.location.street + ', ' + hooman.location.city + '</p>';
     let targetLat = hooman.location.coordinates.latitude;
     let targetLon = hooman.location.coordinates.longitude;
     let clientLat = localStorage.getItem('clientLat');
     let clientLon = localStorage.getItem('clientLon');
-    document.querySelector('.data-container').innerHTML += '<h3 class="location">' + getDistance(clientLat, clientLon, targetLat, targetLon) + '</h3>';
-    document.querySelector('.location').addEventListener('click', function(){
+    document.querySelector('.data-container').innerHTML += '<h3 class="profile-spec">Distance</h3>';
+    document.querySelector('.data-container').innerHTML += '<p>' + getDistance(clientLat, clientLon, targetLat, targetLon) + '</p>';
+    document.querySelector('.data-container').innerHTML += '<button class="show-on-map">Show on map</button>';
+    document.querySelector('.show-on-map').addEventListener('click', function () {
         addProfileToMap(targetLon, targetLat);
     });
 }
@@ -217,13 +225,16 @@ function getDistance(clientLat, clientLon, targetLat, targetLon) {
     return dist;
 }
 
-function metersToPixelsAtMaxZoom(meters, lat){
+function metersToPixelsAtMaxZoom(meters, lat) {
     return meters / 0.075 / Math.cos(lat * Math.PI / 180);
 }
 
-function addProfileToMap(lon, lat){
-    //Make map visible
+function addProfileToMap(lon, lat) {
+    //Scroll to top in case user scrolled down because otherwise the map isn't filling the window
+    window.scrollTo(500, 0);
+    //Make map and close-map icon visible
     document.querySelector('.map').classList.add('map-visible');
+    document.querySelector('.close-map').style.opacity = 1;
     //Center on  target + zoom
     map.flyTo({
         center: [lon, lat],
@@ -249,13 +260,13 @@ function addProfileToMap(lon, lat){
         "source": "geomarker",
         "paint": {
             "circle-radius": {
-                  stops: [
+                stops: [
                     [0, 0],
                     [20, metersToPixelsAtMaxZoom(5000, lat)]
                   ],
-                  base: 2
-                },
-            "circle-color": "#3BBB87", 
+                base: 2
+            },
+            "circle-color": "#3BBB87",
             "circle-opacity": 0.5
         }
     });
